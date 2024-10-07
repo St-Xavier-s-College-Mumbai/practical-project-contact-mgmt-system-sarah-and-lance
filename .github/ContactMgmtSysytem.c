@@ -1,29 +1,26 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 
-// defines the maximum number
 #define MAX_CONTACTS 150
 #define MAX_NAME_LENGTH 100
-#define MAX_BIRTHDAY_LENGTH 10
 #define MAX_EMAIL_LENGTH 50
 #define MAX_PHONE_LENGTH 20
+#define MAX_BIRTHDAY_LENGTH 10
+#define FILE_NAME "CONTACT INFORMATION.txt"
 
-//structure torepresent a contact info
 typedef struct ContactInformation {
-    char name[MAX_NAME_LENGTH];//name
-    char email[MAX_EMAIL_LENGTH];//email
-    char phone[MAX_PHONE_LENGTH];//num
+    char name[MAX_NAME_LENGTH];
+    char email[MAX_EMAIL_LENGTH];
+    char phone[MAX_PHONE_LENGTH];
     int day;
     int month;
-    
 } ContactInformation;
-//keeping track of number of contact used
+
 ContactInformation contacts[MAX_CONTACTS];
 int contactCount = 0;
-// calculated the num of days in month
-int daysInMonth(int month) {
+
+int daysInMonth(int month) {//non leap year
     int daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     return daysInMonth[month - 1];
 }
@@ -53,124 +50,126 @@ void printCalendar(int month, int year) {
     }
     printf("\n");
 }
-//function to add contact
+
+void loadContactsFromFile();
+void saveContactsToFile();
+void addContact(int num_contacts);
+void editContact(int index);
+void deleteContact(int index);
+void printContacts();
+void sortContactsByName();
+void sortContactsByBirthday();
+
+void loadContactsFromFile() {
+    FILE *file = fopen("FILE_NAME", "r");//file from reading only
+    if (file == NULL) {
+        printf("No existing contact file found. Starting fresh.\n");//retrieve saved contacts
+        return;
+    }
+
+    contactCount = 0;
+    while (fscanf(file, "%s %d %d %s %s", contacts[contactCount].name, &contacts[contactCount].day,
+                  &contacts[contactCount].month, contacts[contactCount].email, contacts[contactCount].phone) != EOF) {
+        contactCount++;//how many contacts are used
+
+    }
+
+    fclose(file);
+}
+
+void saveContactsToFile() {
+    FILE *file = fopen("FILE_NAME", "w");//write
+    if (file == NULL) {
+        printf("Error saving contacts to file.\n");
+        return;
+    }
+
+    for (int i = 0; i < contactCount; i++) {
+        fprintf(file, "%s %d %d %s %s\n", contacts[i].name, contacts[i].day, contacts[i].month,
+                contacts[i].email, contacts[i].phone);
+    }
+
+    fclose(file);
+}
+
 void addContact(int num_contacts) {
-    // loop through num of contacts
     for (int i = 0; i < num_contacts; i++) {
-        //get the name
-        char name[MAX_NAME_LENGTH];
         printf("Enter your full name: ");
-        scanf("%s", name);//storing the name
-//get birthday
-        int month, day;
-        printf("Select your birthday:\n");
-        printf("Enter month (1-12): ");
-        scanf("%d", &month);
-        for (; month <= 12; month++) {
-            //print calendar for month
-            printCalendar(month, 2024); // print calendar for each month
-            printf("Enter month (%d) or 0 to go back: ", month);
-            int choice;
-            scanf("%d", &choice);
-            if (choice == 0) {
-                //go back to previous month
-                month--;
-                continue;
-            }
-            printf("Select day: ");
-            for (day = 1; day <= daysInMonth(month); day++) {
-                printf("%d ", day);
-                if (day % 7 == 0) {
-                    printf("\n");
-                }
-            }
-            printf("\nEnter day (1-%d): ", daysInMonth(month));
-            scanf("%d", &day);
-            continue;
-        }
+        scanf("%s", contacts[contactCount].name);
 
-        char email[MAX_EMAIL_LENGTH];
+        printf("Enter day of birth (1-31): ");
+        scanf("%d", &contacts[contactCount].day);
+
+        printf("Enter month of birth (1-12): ");
+        scanf("%d", &contacts[contactCount].month);
+
         printf("Enter email: ");
-        scanf("%s", email);
+        scanf("%s", contacts[contactCount].email);
 
-        char phone[MAX_PHONE_LENGTH];
         printf("Enter phone number: ");
-        scanf("%s", phone);
-//add the contacts to an array
-        strcpy(contacts[contactCount].name, name);
-        contacts[contactCount].day = day;
-        contacts[contactCount].month = month;
-        strcpy(contacts[contactCount].email, email);
-        strcpy(contacts[contactCount].phone, phone);
+        scanf("%s", contacts[contactCount].phone);
+
         contactCount++;
     }
+    saveContactsToFile(); // Save contacts to file after adding new ones
 }
-//function to edit
+
 void editContact(int index) {
-    char name[MAX_NAME_LENGTH];
     printf("Enter new name: ");
-    scanf("%s", name);
-//nw birthday
-    int month, day;
-    printf("Select new birthday:\n");
-    for (month = 1; month <= 12; month++) {
-        printCalendar(month, 2024); // print calendar for each month
-        printf("Enter month (%d) or 0 to go back: ", month);
-        int choice;
-        scanf("%d", &choice);
-        if (choice == 0) {
-            month--;
-            break;
-        }
-        printf("Select day: ");
-        for (day = 1; day <= daysInMonth(month); day++) {
-            printf("%d ", day);
-            if (day % 7 == 0) {
-                printf("\n");
-            }
-        }
-        printf("\nEnter day (1-%d): ", daysInMonth(month));
-        scanf("%d", &day);
-        break;
-    }
+    scanf("%s", contacts[index].name);
 
-    char email[MAX_EMAIL_LENGTH];
+    printf("Enter new day of birth (1-31): ");
+    scanf("%d", &contacts[index].day);
+
+    printf("Enter new month of birth (1-12): ");
+    scanf("%d", &contacts[index].month);
+
     printf("Enter new email: ");
-    scanf("%s", email);
+    scanf("%s", contacts[index].email);
 
-    char phone[MAX_PHONE_LENGTH];
     printf("Enter new phone number: ");
-    scanf("%s", phone);
-//update the contact into array
-    strcpy(contacts[index].name, name);
-    contacts[index].day = day;
-    contacts[index].month = month;
-    strcpy(contacts[index].email, email);
-    strcpy(contacts[index].phone, phone);
+    scanf("%s", contacts[index].phone);
+
+    saveContactsToFile(); // Save contacts to file after editing
 }
-//function to delete contact
+
 void deleteContact(int index) {
-    // Shift all contacts after the deleted contact down by one
     for (int i = index; i < contactCount - 1; i++) {
         contacts[i] = contacts[i + 1];
     }
-    //decrement the count
     contactCount--;
+
+    saveContactsToFile(); // Save contacts to file after deleting
 }
-//sorting contact by name
+
+void printContacts() {
+    if (contactCount == 0) {
+        printf("No contacts to display.\n");
+        return;
+    }
+
+    for (int i = 0; i < contactCount; i++) {
+        printf("Name: %s\n", contacts[i].name);
+        printf("Birthday: %d/%d\n", contacts[i].day, contacts[i].month);
+        printf("Email: %s\n", contacts[i].email);
+        printf("Phone: %s\n", contacts[i].phone);
+        printf("\n");
+    }
+}
+
 void sortContactsByName() {
     for (int i = 0; i < contactCount - 1; i++) {
         for (int j = 0; j < contactCount - i - 1; j++) {
             if (strcmp(contacts[j].name, contacts[j + 1].name) > 0) {
-                //swap contacts
                 ContactInformation temp = contacts[j];
                 contacts[j] = contacts[j + 1];
                 contacts[j + 1] = temp;
             }
         }
     }
+    saveContactsToFile(); // Save contacts to file after sorting
 }
-//by birthday
+
 void sortContactsByBirthday() {
     for (int i = 0; i < contactCount - 1; i++) {
         for (int j = 0; j < contactCount - i - 1; j++) {
@@ -181,43 +180,35 @@ void sortContactsByBirthday() {
             }
         }
     }
+    saveContactsToFile(); // Save contacts to file after sorting
 }
-//print all contacts
-void printContacts() {// check if there are contacts
-    if (contactCount == 0) {
-        printf("No contacts to display.\n");
-    } else{
-    for (int i = 0; i < contactCount; i++) {
-        printf(" Name: %s\n Birthday: %d/%d\n Email: %s\n Phone: %s\n", contacts[i].name, contacts[i].day, contacts[i].month, contacts[i].email, contacts[i].phone);
-        
-    }
-  
-    }
-}
-//main function
+
 int main() {
+    loadContactsFromFile(); // Load existing contacts from the file at the start
+
     int choice;
-    while (1) {//infinite loop
+    while (1) {
         printf("\n\t\t\t\t**** WELCOME TO CONTACT MANAGEMENT SYSTEM **** \n");
         printf("\t\t\t\t\t+-------------------------------+\n");
         printf("\t\t\t\t\t|          MAIN MENU          |\n");
         printf("\t\t\t\t\t+-------------------------------+\n\n");
 
+        
         printf("1. Add contact\n");
         printf("2. Edit contact\n");
         printf("3. Delete contact\n");
         printf("4. Sort contacts by name\n");
         printf("5. Sort contacts by birthday\n");
         printf("6. Print contacts\n");
-        printf("7. Exit\n\n");
+        printf("7. Exit\n");
 
         printf("\t\t\t\t\t+-------------------------------+\n");
         printf("\t\t\t\t\t|        PLEASE SELECT AN      |\n");
         printf("\t\t\t\t\t|        OPTION FROM ABOVE     |\n");
         printf("\t\t\t\t\t+-------------------------------+\n\n");
+
         printf("Enter your choice: ");
         scanf("%d", &choice);
-        
         printf("\n");
 
         switch (choice) {
@@ -235,12 +226,13 @@ int main() {
                     printf("Contact list is full. Please delete some contacts before adding more.\n");
                 }
                 break;
+            
             case 2:
                 if (contactCount == 0) {
                     printf("No contacts to edit.\n");
                 } else {
-                    printf("Enter contact index to edit (1-%d): ", contactCount);
                     int index;
+                    printf("Enter contact index to edit (1-%d): ", contactCount);
                     scanf("%d", &index);
                     editContact(index - 1);
                 }
@@ -249,8 +241,8 @@ int main() {
                 if (contactCount == 0) {
                     printf("No contacts to delete.\n");
                 } else {
-                    printf("Enter contact index to delete (1-%d): ", contactCount);
                     int index;
+                    printf("Enter contact index to delete (1-%d): ", contactCount);
                     scanf("%d", &index);
                     deleteContact(index - 1);
                 }
@@ -265,10 +257,12 @@ int main() {
                 printContacts();
                 break;
             case 7:
+                saveContactsToFile(); // Save contacts to file before exiting
                 return 0;
             default:
                 printf("Invalid choice. Please try again.\n");
         }
     }
+
     return 0;
 }
